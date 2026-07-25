@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>😊 Smiley Obby 10 Levels</title>
+
+<style>
+
+body{
+margin:0;
+overflow:hidden;
+background:linear-gradient(#6ec6ff,#dff7ff);
+font-family:Arial;
+}
+
+#game{
+position:relative;
+width:100vw;
+height:100vh;
+}
+
+#title{
+position:absolute;
+top:20px;
+width:100%;
+text-align:center;
+font-size:40px;
+color:white;
+text-shadow:3px 3px blue;
+}
+
+#stage{
+position:absolute;
+top:80px;
+left:20px;
+font-size:30px;
+color:white;
+}
+
+#player{
+position:absolute;
+font-size:40px;
+}
+
+.platform{
+position:absolute;
+background:#39b54a;
+border:3px solid green;
+border-radius:10px;
+}
+
+.lava{
+position:absolute;
+background:red;
+}
+
+.finish{
+position:absolute;
+width:70px;
+height:120px;
+background:gold;
+border:5px solid orange;
+border-radius:15px;
+font-size:45px;
+text-align:center;
+}
+
+
+#win{
+display:none;
+position:absolute;
+top:250px;
+width:100%;
+text-align:center;
+font-size:60px;
+color:white;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div id="game">
+
+<div id="title">
+😊 Smiley Obby 😊
+</div>
+
+<div id="stage">
+Level 1
+</div>
+
+<div id="player">
+😊
+</div>
+
+
+<div id="win">
+🏆 YOU FINISHED ALL 10 LEVELS! 🏆
+</div>
+
+</div>
+
+
+
+<script>
+
+let player=document.getElementById("player");
+
+let x=50;
+let y=450;
+
+let velocityY=0;
+
+let gravity=0.7;
+
+let jumpPower=-14;
+
+let speed=6;
+
+let ground=false;
+
+let keys={};
+
+let level=0;
+
+
+
+let levels=[
+
+
+{
+platforms:[[0,550,250,40],[350,450,180,40],[650,350,180,40]],
+lava:[[250,580,100,20]],
+finish:850
+},
+
+
+{
+platforms:[[0,550,200,40],[300,480,150,40],[520,380,150,40],[750,280,150,40]],
+lava:[[200,580,100,20],[650,580,100,20]],
+finish:850
+},
+
+
+{
+platforms:[[0,550,180,40],[250,430,120,40],[450,330,120,40],[650,230,150,40]],
+lava:[[180,580,300,20]],
+finish:820
+},
+
+
+{
+platforms:[[0,550,150,40],[220,450,120,40],[420,350,120,40],[620,250,120,40],[800,150,100,40]],
+lava:[[150,580,270,20]],
+finish:820
+},
+
+
+{
+platforms:[[0,550,130,40],[200,450,100,40],[380,350,100,40],[560,250,100,40],[760,150,150,40]],
+lava:[[130,580,600,20]],
+finish:820
+},
+
+
+{
+platforms:[[0,550,180,40],[250,500,120,40],[450,420,120,40],[650,330,120,40],[850,230,100,40]],
+lava:[[180,580,600,20]],
+finish:850
+},
+
+
+{
+platforms:[[0,550,120,40],[180,450,120,40],[360,350,120,40],[540,250,120,40],[720,150,150,40]],
+lava:[[120,580,600,20]],
+finish:800
+},
+
+
+{
+platforms:[[0,550,150,40],[250,430,100,40],[450,300,100,40],[650,430,100,40],[850,300,100,40]],
+lava:[[150,580,700,20]],
+finish:850
+},
+
+
+{
+platforms:[[0,550,120,40],[200,400,120,40],[400,250,120,40],[600,400,120,40],[800,250,120,40]],
+lava:[[120,580,700,20]],
+finish:850
+},
+
+
+{
+platforms:[[0,550,120,40],[180,450,100,40],[350,350,100,40],[520,250,100,40],[700,150,200,40]],
+lava:[[120,580,650,20]],
+finish:820
+}
+
+
+];
+
+
+
+document.addEventListener("keydown",e=>{
+keys[e.code]=true;
+});
+
+
+document.addEventListener("keyup",e=>{
+keys[e.code]=false;
+});
+
+
+
+function clearLevel(){
+
+document.querySelectorAll(".platform,.lava,.finish")
+.forEach(e=>e.remove());
+
+}
+
+
+
+function loadLevel(){
+
+clearLevel();
+
+let L=levels[level];
+
+
+L.platforms.forEach(p=>{
+
+let block=document.createElement("div");
+
+block.className="platform";
+
+block.style.left=p[0]+"px";
+block.style.top=p[1]+"px";
+block.style.width=p[2]+"px";
+block.style.height=p[3]+"px";
+
+game.appendChild(block);
+
+});
+
+
+L.lava.forEach(p=>{
+
+let block=document.createElement("div");
+
+block.className="lava";
+
+block.style.left=p[0]+"px";
+block.style.top=p[1]+"px";
+block.style.width=p[2]+"px";
+block.style.height=p[3]+"px";
+
+game.appendChild(block);
+
+});
+
+
+let finish=document.createElement("div");
+
+finish.className="finish";
+
+finish.innerHTML="🏁";
+
+finish.style.left=L.finish+"px";
+finish.style.top="300px";
+
+game.appendChild(finish);
+
+
+document.getElementById("stage").innerHTML=
+"Level "+(level+1);
+
+}
+
+
+
+function reset(){
+
+x=50;
+y=450;
+velocityY=0;
+
+}
+
+
+
+function collision(a,b){
+
+return(
+a.left<b.right &&
+a.right>b.left &&
+a.top<b.bottom &&
+a.bottom>b.top
+);
+
+}
+
+
+
+function loop(){
+
+
+// movement
+
+if(keys["KeyW"]){
+x+=speed;
+}
+
+
+if(keys["KeyS"]){
+x-=speed;
+}
+
+
+// jump
+
+if(keys["Space"] && ground){
+
+velocityY=jumpPower;
+ground=false;
+
+}
+
+
+// gravity
+
+velocityY+=gravity;
+y+=velocityY;
+
+ground=false;
+
+
+
+let playerBox={
+left:x,
+right:x+40,
+top:y,
+bottom:y+40
+};
+
+
+
+// platforms
+
+document.querySelectorAll(".platform").forEach(p=>{
+
+let r=p.getBoundingClientRect();
+
+
+if(collision(playerBox,{
+left:r.left,
+right:r.right,
+top:r.top,
+bottom:r.bottom
+})
+&& velocityY>0){
+
+y=r.top-40;
+velocityY=0;
+ground=true;
+
+}
+
+});
+
+
+
+// lava
+
+document.querySelectorAll(".lava").forEach(l=>{
+
+let r=l.getBoundingClientRect();
+
+
+if(collision(playerBox,{
+left:r.left,
+right:r.right,
+top:r.top,
+bottom:r.bottom
+})){
+
+reset();
+
+}
+
+});
+
+
+// falling
+
+if(y>700){
+
+reset();
+
+}
+
+
+// finish
+
+let finish=document.querySelector(".finish");
+
+
+if(finish){
+
+let r=finish.getBoundingClientRect();
+
+
+if(collision(playerBox,{
+left:r.left,
+right:r.right,
+top:r.top,
+bottom:r.bottom
+})){
+
+level++;
+
+
+if(level>=10){
+
+document.getElementById("win").style.display="block";
+return;
+
+}
+
+
+reset();
+loadLevel();
+
+}
+
+}
+
+
+
+player.style.left=x+"px";
+player.style.top=y+"px";
+
+
+requestAnimationFrame(loop);
+
+}
+
+
+
+loadLevel();
+loop();
+
+
+</script>
+
+
+</body>
+</html>
